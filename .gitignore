@@ -1,0 +1,14 @@
+.*.swp~
+.*.un~
+target
+*.class
+*.iml
+.classpath
+.project
+settings.xml
+.settings
+!/.idea/codeStyleSettings.xml
+.idea
+dependency-reduced-pom.xml
+/.cache/*
+.DS_Store
