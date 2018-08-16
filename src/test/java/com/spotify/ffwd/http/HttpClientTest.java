@@ -20,9 +20,6 @@
 
 package com.spotify.ffwd.http;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -52,7 +49,7 @@ public class HttpClientTest {
 
     private final HttpRequest pingRequest = request().withMethod("GET").withPath("/ping");
 
-    final List<HttpDiscovery.HostAndPort> servers = new ArrayList<>();
+    private final List<HttpDiscovery.HostAndPort> servers = new ArrayList<>();
 
     @Before
     public void setUp() throws Exception {
@@ -74,8 +71,9 @@ public class HttpClientTest {
     @Test
     public void testSendBatchSuccess() {
         final String batchRequest =
-            "{\"commonTags\":{\"what\":\"error-rate\"},\"points\":[{\"key\":\"test_key\"," +
-                "\"tags\":{\"what\":\"error-rate\"},\"value\":1234.0,\"timestamp\":11111}]}";
+            "{\"commonTags\":{\"what\":\"error-rate\"},\"commonResource\":{},\"points\":"
+            + "[{\"key\":\"test_key\",\"tags\":{\"what\":\"error-rate\"},\"resource\":"
+            + "{},\"value\":1234.0,\"timestamp\":11111}]}";
 
         final HttpRequest request = request()
             .withMethod("POST")
@@ -85,12 +83,7 @@ public class HttpClientTest {
 
         mockServerClient.when(request).respond(response().withStatusCode(200));
 
-        final Batch.Point point =
-            new Batch.Point("test_key", ImmutableMap.of("what", "error-rate"), 1234L, 11111L);
-        final Batch batch =
-            new Batch(ImmutableMap.of("what", "error-rate"), ImmutableList.of(point));
-
-        httpClient.sendBatch(batch).toCompletable().await();
+        httpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
 
         mockServerClient.verify(request, VerificationTimes.atLeast(1));
     }
@@ -100,8 +93,9 @@ public class HttpClientTest {
         expected.expectMessage("500: Internal Server Error");
 
         final String batchRequest =
-            "{\"commonTags\":{\"what\":\"error-rate\"},\"points\":[{\"key\":\"test_key\"," +
-                "\"tags\":{\"what\":\"error-rate\"},\"value\":1234.0,\"timestamp\":11111}]}";
+            "{\"commonTags\":{\"what\":\"error-rate\"},\"commonResource\":{},\"points\":"
+            + "[{\"key\":\"test_key\",\"tags\":{\"what\":\"error-rate\"},\"resource\":"
+            + "{},\"value\":1234.0,\"timestamp\":11111}]}";
 
         final HttpRequest request = request()
             .withMethod("POST")
@@ -111,13 +105,8 @@ public class HttpClientTest {
 
         mockServerClient.when(request).respond(response().withStatusCode(500));
 
-        final Batch.Point point =
-            new Batch.Point("test_key", ImmutableMap.of("what", "error-rate"), 1234L, 11111L);
-        final Batch batch =
-            new Batch(ImmutableMap.of("what", "error-rate"), ImmutableList.of(point));
-
         try {
-            httpClient.sendBatch(batch).toCompletable().await();
+            httpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
         } finally {
             mockServerClient.verify(request, VerificationTimes.atLeast(3));
         }

@@ -20,9 +20,6 @@
 
 package com.spotify.ffwd.http;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.After;
@@ -82,8 +79,9 @@ public class RawHttpClientTest {
     @Test
     public void testSendBatchSuccess() {
         final String batchRequest =
-            "{\"commonTags\":{\"what\":\"error-rate\"},\"points\":[{\"key\":\"test_key\"," +
-                "\"tags\":{\"what\":\"error-rate\"},\"value\":1234.0,\"timestamp\":11111}]}";
+            "{\"commonTags\":{\"what\":\"error-rate\"},\"commonResource\":{},\"points\":"
+            + "[{\"key\":\"test_key\",\"tags\":{\"what\":\"error-rate\"},\"resource\":"
+            + "{},\"value\":1234.0,\"timestamp\":11111}]}";
 
         mockServerClient
             .when(request()
@@ -93,12 +91,7 @@ public class RawHttpClientTest {
                 .withBody(batchRequest))
             .respond(response().withStatusCode(200));
 
-        final Batch.Point point =
-            new Batch.Point("test_key", ImmutableMap.of("what", "error-rate"), 1234L, 11111L);
-        final Batch batch =
-            new Batch(ImmutableMap.of("what", "error-rate"), ImmutableList.of(point));
-
-        rawHttpClient.sendBatch(batch).toCompletable().await();
+        rawHttpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
     }
 
     @Test
@@ -106,8 +99,9 @@ public class RawHttpClientTest {
         expected.expectMessage("500: Internal Server Error");
 
         final String batchRequest =
-            "{\"commonTags\":{\"what\":\"error-rate\"},\"points\":[{\"key\":\"test_key\"," +
-                "\"tags\":{\"what\":\"error-rate\"},\"value\":1234.0,\"timestamp\":11111}]}";
+            "{\"commonTags\":{\"what\":\"error-rate\"},\"commonResource\":{},\"points\":"
+            + "[{\"key\":\"test_key\",\"tags\":{\"what\":\"error-rate\"},\"resource\":"
+            + "{},\"value\":1234.0,\"timestamp\":11111}]}";
 
         mockServerClient
             .when(request()
@@ -117,11 +111,6 @@ public class RawHttpClientTest {
                 .withBody(batchRequest))
             .respond(response().withStatusCode(500));
 
-        final Batch.Point point =
-            new Batch.Point("test_key", ImmutableMap.of("what", "error-rate"), 1234L, 11111L);
-        final Batch batch =
-            new Batch(ImmutableMap.of("what", "error-rate"), ImmutableList.of(point));
-
-        rawHttpClient.sendBatch(batch).toCompletable().await();
+        rawHttpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
     }
 }
