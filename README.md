@@ -1,5 +1,5 @@
 # ffwd-http-client &#187;
-[![Build Status](https://travis-ci.org/spotify/ffwd.svg?branch=master)](https://travis-ci.org/spotify/ffwd)
+[![Build Status](https://travis-ci.org/spotify/ffwd-http-client.svg?branch=master)](https://travis-ci.org/spotify/ffwd-http-client)
 [![License](https://img.shields.io/github/license/spotify/ffwd.svg)](LICENSE)
 
 
