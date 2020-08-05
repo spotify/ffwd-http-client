@@ -62,14 +62,14 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jackson.version>2.8.11</jackson.version>
     <slf4j.version>1.7.10</slf4j.version>
-    <ribbon.version>2.2.2</ribbon.version>
+    <ribbon.version>2.7.18</ribbon.version>
   </properties>
   
   <dependencies>
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.16.18</version>
+      <version>1.18.4</version>
       <scope>provided</scope>
     </dependency>
 
@@ -101,6 +101,12 @@
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>okhttp</artifactId>
       <version>3.9.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.netflix.ribbon</groupId>
+      <artifactId>ribbon</artifactId>
+      <version>${ribbon.version}</version>
     </dependency>
 
     <dependency>
