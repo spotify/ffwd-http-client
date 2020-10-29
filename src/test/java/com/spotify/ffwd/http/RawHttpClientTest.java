@@ -31,6 +31,8 @@ import org.mockserver.client.server.MockServerClient;
 import org.mockserver.junit.MockServerRule;
 
 import okhttp3.OkHttpClient;
+import org.mockserver.model.HttpRequest;
+
 
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -92,6 +94,20 @@ public class RawHttpClientTest {
             .respond(response().withStatusCode(200));
 
         rawHttpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
+    }
+
+    @Test
+    public void testSendBatchSuccessV2() {
+        final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH_V2);
+        mockServerClient
+                .when(request()
+                        .withMethod("POST")
+                        .withPath("/" + RawHttpClient.V2_BATCH_ENDPOINT)
+                        .withHeader("content-type", "application/json")
+                        .withBody(batchRequest))
+                .respond(response().withStatusCode(200));
+
+        rawHttpClient.sendBatch(TestUtils.BATCH_V2).toCompletable().await();
     }
 
     @Test
