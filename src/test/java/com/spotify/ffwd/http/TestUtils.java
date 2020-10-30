@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import com.spotify.ffwd.http.model.v1.Batch;
 import com.spotify.ffwd.http.model.v2.Value;
 import java.util.Optional;
 import com.google.protobuf.ByteString;

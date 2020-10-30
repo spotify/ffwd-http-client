@@ -22,6 +22,7 @@ package com.spotify.ffwd.http;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.spotify.ffwd.http.model.v1.Batch;
 import java.io.IOException;
 import lombok.Data;
 import okhttp3.Call;

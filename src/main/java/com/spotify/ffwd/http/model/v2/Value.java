@@ -38,8 +38,6 @@ public  abstract class Value {
     @JsonProperty("value")
     public abstract Object getValue();
 
-    abstract boolean isValid();
-
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class DoubleValue extends Value {
@@ -49,16 +47,6 @@ public  abstract class Value {
                 final double value) {
             return new Value.DoubleValue(value);
         }
-
-        @Override
-        public boolean isValid() {
-            return (getValue() > 0); //TODO NaN ??
-        }
-
-        @Override
-        public Double getValue() {
-            return value;
-        }
     }
 
     @Data
@@ -66,17 +54,11 @@ public  abstract class Value {
     public static class DistributionValue  extends Value {
         private final ByteString value;
 
-
         @Override
         public ByteString getValue() {
             return value;
         }
 
-        @Override
-        public boolean isValid() {
-            return (getValue() != null &&
-                    !getValue().isEmpty()); //TODO NaN ??
-        }
 
         public static Value.DistributionValue create(
                 final ByteString value) {

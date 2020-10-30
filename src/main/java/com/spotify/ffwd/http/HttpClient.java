@@ -30,6 +30,7 @@ import com.netflix.loadbalancer.RetryRule;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import com.netflix.loadbalancer.reactive.ServerOperation;
+import com.spotify.ffwd.http.model.v1.Batch;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
