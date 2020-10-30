@@ -52,10 +52,11 @@ public class HttpClientTest {
     private final List<HttpDiscovery.HostAndPort> servers = new ArrayList<>();
 
     private final static int SUCCESS = 200;
+    private final static int ERROR_CODE = 500;
 
     @Before
     public void setUp() throws Exception {
-        mockServerClient.when(pingRequest).respond(response().withStatusCode(200));
+        mockServerClient.when(pingRequest).respond(response().withStatusCode(SUCCESS));
 
         servers.add(new HttpDiscovery.HostAndPort("localhost", mockServer.getPort()));
         servers.add(new HttpDiscovery.HostAndPort("localhost", mockServer.getPort()));
@@ -101,7 +102,7 @@ public class HttpClientTest {
     public void testSendBatchFail() {
         expected.expectMessage("500: Internal Server Error");
         final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH);
-        final HttpRequest request = sendRequest( batchRequest, RawHttpClient.V1_BATCH_ENDPOINT, 500);
+        final HttpRequest request = sendRequest( batchRequest, RawHttpClient.V1_BATCH_ENDPOINT, ERROR_CODE);
         try {
             httpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
         } finally {
