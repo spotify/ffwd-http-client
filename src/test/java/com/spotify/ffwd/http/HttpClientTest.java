@@ -51,9 +51,12 @@ public class HttpClientTest {
 
     private final List<HttpDiscovery.HostAndPort> servers = new ArrayList<>();
 
+    private final static int SUCCESS = 200;
+    private final static int ERROR_CODE = 500;
+
     @Before
     public void setUp() throws Exception {
-        mockServerClient.when(pingRequest).respond(response().withStatusCode(200));
+        mockServerClient.when(pingRequest).respond(response().withStatusCode(SUCCESS));
 
         servers.add(new HttpDiscovery.HostAndPort("localhost", mockServer.getPort()));
         servers.add(new HttpDiscovery.HostAndPort("localhost", mockServer.getPort()));
@@ -70,41 +73,36 @@ public class HttpClientTest {
 
     @Test
     public void testSendBatchSuccess() {
-        final String batchRequest =
-            "{\"commonTags\":{\"what\":\"error-rate\"},\"commonResource\":{},\"points\":"
-            + "[{\"key\":\"test_key\",\"tags\":{\"what\":\"error-rate\"},\"resource\":"
-            + "{},\"value\":1234.0,\"timestamp\":11111}]}";
-
-        final HttpRequest request = request()
-            .withMethod("POST")
-            .withPath("/v1/batch")
-            .withHeader("content-type", "application/json")
-            .withBody(batchRequest);
-
-        mockServerClient.when(request).respond(response().withStatusCode(200));
-
+        final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH);
+        final HttpRequest request = sendRequest(batchRequest, RawHttpClient.V1_BATCH_ENDPOINT, SUCCESS);
         httpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
-
         mockServerClient.verify(request, VerificationTimes.atLeast(1));
+    }
+
+    @Test
+    public void testSendBatchSuccessV2() {
+        final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH_V2);
+        final HttpRequest request = sendRequest(batchRequest, RawHttpClient.V2_BATCH_ENDPOINT, SUCCESS);
+        httpClient.sendBatch(TestUtils.BATCH_V2).toCompletable().await();
+        mockServerClient.verify(request, VerificationTimes.atLeast(1));
+    }
+
+    private HttpRequest sendRequest(final String json, final String url, final int statusCode){
+        final HttpRequest request = request()
+                .withMethod("POST")
+                .withPath( "/" + url)
+                .withHeader("content-type", "application/json")
+                .withBody(json);
+
+        mockServerClient.when(request).respond(response().withStatusCode(statusCode));
+        return request;
     }
 
     @Test
     public void testSendBatchFail() {
         expected.expectMessage("500: Internal Server Error");
-
-        final String batchRequest =
-            "{\"commonTags\":{\"what\":\"error-rate\"},\"commonResource\":{},\"points\":"
-            + "[{\"key\":\"test_key\",\"tags\":{\"what\":\"error-rate\"},\"resource\":"
-            + "{},\"value\":1234.0,\"timestamp\":11111}]}";
-
-        final HttpRequest request = request()
-            .withMethod("POST")
-            .withPath("/v1/batch")
-            .withHeader("content-type", "application/json")
-            .withBody(batchRequest);
-
-        mockServerClient.when(request).respond(response().withStatusCode(500));
-
+        final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH);
+        final HttpRequest request = sendRequest( batchRequest, RawHttpClient.V1_BATCH_ENDPOINT, ERROR_CODE);
         try {
             httpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
         } finally {

@@ -22,6 +22,7 @@ package com.spotify.ffwd.http;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.spotify.ffwd.http.model.v1.Batch;
 import java.io.IOException;
 import lombok.Data;
 import okhttp3.Call;
@@ -37,6 +38,7 @@ import rx.Subscriber;
 @Data
 public class RawHttpClient {
     public static final String V1_BATCH_ENDPOINT = "v1/batch";
+    public static final String V2_BATCH_ENDPOINT = "v2/batch";
     public static final String PING_ENDPOINT = "ping";
 
     private final ObjectMapper mapper;
@@ -44,6 +46,14 @@ public class RawHttpClient {
     private final String baseUrl;
 
     public Observable<Void> sendBatch(final Batch batch) {
+        return sendBatch(batch, V1_BATCH_ENDPOINT);
+    }
+
+    public Observable<Void> sendBatch(final com.spotify.ffwd.http.model.v2.Batch batch) {
+        return sendBatch(batch, V2_BATCH_ENDPOINT);
+    }
+
+    private Observable<Void> sendBatch(final Object batch, final String url) {
         final byte[] body;
 
         try {
@@ -54,11 +64,12 @@ public class RawHttpClient {
 
         final Request.Builder request = new Request.Builder();
 
-        request.url(baseUrl + "/" + V1_BATCH_ENDPOINT);
+        request.url(baseUrl + "/" + url);
         request.post(RequestBody.create(MediaType.parse("application/json"), body));
 
         return execute(request);
     }
+
 
     public Observable<Void> ping() {
         final Request.Builder request = new Request.Builder();

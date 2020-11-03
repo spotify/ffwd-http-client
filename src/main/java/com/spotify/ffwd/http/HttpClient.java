@@ -30,6 +30,7 @@ import com.netflix.loadbalancer.RetryRule;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import com.netflix.loadbalancer.reactive.ServerOperation;
+import com.spotify.ffwd.http.model.v1.Batch;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -52,6 +53,16 @@ public class HttpClient {
             }
         }).retryWhen(new RetryWithDelay(retries, baseDelayMillis, maxDelayMillis));
     }
+
+    public Observable<Void> sendBatch(final com.spotify.ffwd.http.model.v2.Batch batch) {
+        return buildCommand().submit(new ServerOperation<Void>() {
+            @Override
+            public Observable<Void> call(final Server server) {
+                return HttpClient.this.clientFactory.newClient(server).sendBatch(batch);
+            }
+        }).retryWhen(new RetryWithDelay(retries, baseDelayMillis, maxDelayMillis));
+    }
+
 
     public void shutdown() {
         RuntimeException e = null;

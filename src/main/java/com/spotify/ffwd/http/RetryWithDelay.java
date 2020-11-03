@@ -51,7 +51,6 @@ public class RetryWithDelay implements Func1<Observable<? extends Throwable>, Ob
                     retryDelayMillis = Math.min(retryDelayMillis * 2, maxDelayMillis);
                     return Observable.timer(retryMillis + jitter, TimeUnit.MILLISECONDS);
                 }
-
                 // Max retries hit. Just pass the error along.
                 return Observable.error(throwable);
             }

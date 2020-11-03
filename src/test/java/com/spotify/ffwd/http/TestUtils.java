@@ -20,10 +20,14 @@
 
 package com.spotify.ffwd.http;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import com.spotify.ffwd.http.model.v1.Batch;
+import com.spotify.ffwd.http.model.v2.Value;
 import java.util.Optional;
+import com.google.protobuf.ByteString;
 
 class TestUtils {
 
@@ -33,9 +37,35 @@ class TestUtils {
                          Optional.empty(),
                          1234L,
                          11111L);
+  static final com.spotify.ffwd.http.model.v2.Batch.Point DISTRIBUTION_POINT_1 =
+          com.spotify.ffwd.http.model.v2.Batch.Point.create("test_key",
+                  Optional.of(ImmutableMap.of("what", "error-rate")),
+                  Optional.empty(),
+                  Value.DoubleValue.create(1234D),
+                  11111L);
+
+  static final com.spotify.ffwd.http.model.v2.Batch.Point DISTRIBUTION_POINT_2 =
+          com.spotify.ffwd.http.model.v2.Batch.Point.create("test_key",
+                  Optional.of(ImmutableMap.of("what", "error-rate")),
+                  Optional.empty(),
+                  Value.DistributionValue.create(ByteString.copyFromUtf8("ABCDEFG_1234")),
+                  11123L);
 
   static final Batch BATCH =
       Batch.create(Optional.of(
           ImmutableMap.of("what", "error-rate")), Optional.empty(), ImmutableList.of(POINT));
 
+  static final com.spotify.ffwd.http.model.v2.Batch BATCH_V2 =
+          com.spotify.ffwd.http.model.v2.Batch.create(Optional.of(
+                  ImmutableMap.of("what", "error-rate")),
+                  Optional.empty(), ImmutableList.of(DISTRIBUTION_POINT_1, DISTRIBUTION_POINT_2));
+
+  static String createJsonString(Object object) {
+    final ObjectMapper mapper = HttpClient.Builder.setupApplicationJson();
+    try {
+      return mapper.writeValueAsString(object);
+    }catch(Exception e){
+      throw new RuntimeException(e);
+    }
+  }
 }

@@ -18,7 +18,7 @@
  * -/-/-
  */
 
-package com.spotify.ffwd.http;
+package com.spotify.ffwd.http.model.v1;
 
 import com.google.common.collect.ImmutableMap;
 
