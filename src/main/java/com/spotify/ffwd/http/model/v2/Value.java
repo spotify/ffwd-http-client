@@ -20,7 +20,6 @@
 
 package com.spotify.ffwd.http.model.v2;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -35,34 +34,34 @@ import lombok.Data;
 @JsonSerialize(using = ValueSerializer.class)
 @JsonDeserialize(using = ValueDeserializer.class)
 public  abstract class Value {
-    @JsonProperty("value")
-    public abstract Object getValue();
+  @JsonProperty("value")
+  public abstract Object getValue();
 
-    @Data
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class DoubleValue extends Value {
-        private final Double value;
+  @Data
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class DoubleValue extends Value {
+    private final Double value;
 
-        public static Value.DoubleValue create(
-                final double value) {
-            return new Value.DoubleValue(value);
-        }
+    public static Value.DoubleValue create(
+        final double value) {
+      return new Value.DoubleValue(value);
+    }
+  }
+
+  @Data
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class DistributionValue  extends Value {
+    private final ByteString value;
+
+    @Override
+    public ByteString getValue() {
+      return value;
     }
 
-    @Data
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class DistributionValue  extends Value {
-        private final ByteString value;
 
-        @Override
-        public ByteString getValue() {
-            return value;
-        }
-
-
-        public static Value.DistributionValue create(
-                final ByteString value) {
-            return new Value.DistributionValue(value);
-        }
+    public static Value.DistributionValue create(
+        final ByteString value) {
+      return new Value.DistributionValue(value);
     }
+  }
 }

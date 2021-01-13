@@ -35,45 +35,45 @@ import okio.Okio;
  * https://github.com/square/okhttp/issues/350
  */
 class GzipRequestInterceptor implements Interceptor {
-    @Override
-    public Response intercept(Chain chain) throws IOException {
-        final Request request = chain.request();
+  @Override
+  public Response intercept(Chain chain) throws IOException {
+    final Request request = chain.request();
 
-        if (request.body() == null || request.header("Content-Encoding") != null) {
-            return chain.proceed(request);
-        }
-
-        final Request compressedRequest = request
-            .newBuilder()
-            .header("Content-Encoding", "gzip")
-            .method(request.method(), compress(request.body()))
-            .build();
-
-        return chain.proceed(compressedRequest);
+    if (request.body() == null || request.header("Content-Encoding") != null) {
+      return chain.proceed(request);
     }
 
-    private RequestBody compress(final RequestBody body) throws IOException {
-        final Buffer buffer = new Buffer();
+    final Request compressedRequest = request
+        .newBuilder()
+        .header("Content-Encoding", "gzip")
+        .method(request.method(), compress(request.body()))
+        .build();
 
-        try (final BufferedSink gzipSink = Okio.buffer(new GzipSink(buffer))) {
-            body.writeTo(gzipSink);
-        }
+    return chain.proceed(compressedRequest);
+  }
 
-        return new RequestBody() {
-            @Override
-            public MediaType contentType() {
-                return body.contentType();
-            }
+  private RequestBody compress(final RequestBody body) throws IOException {
+    final Buffer buffer = new Buffer();
 
-            @Override
-            public long contentLength() {
-                return buffer.size();
-            }
-
-            @Override
-            public void writeTo(BufferedSink sink) throws IOException {
-                sink.write(buffer.snapshot());
-            }
-        };
+    try (final BufferedSink gzipSink = Okio.buffer(new GzipSink(buffer))) {
+      body.writeTo(gzipSink);
     }
+
+    return new RequestBody() {
+      @Override
+      public MediaType contentType() {
+        return body.contentType();
+      }
+
+      @Override
+      public long contentLength() {
+        return buffer.size();
+      }
+
+      @Override
+      public void writeTo(BufferedSink sink) throws IOException {
+        sink.write(buffer.snapshot());
+      }
+    };
+  }
 }

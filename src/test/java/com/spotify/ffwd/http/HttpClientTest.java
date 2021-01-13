@@ -37,76 +37,76 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 public class HttpClientTest {
-    @Rule
-    public MockServerRule mockServer = new MockServerRule(this);
+  @Rule
+  public MockServerRule mockServer = new MockServerRule(this);
 
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
+  @Rule
+  public ExpectedException expected = ExpectedException.none();
 
-    private MockServerClient mockServerClient;
+  private MockServerClient mockServerClient;
 
-    private HttpClient httpClient;
+  private HttpClient httpClient;
 
-    private final HttpRequest pingRequest = request().withMethod("GET").withPath("/ping");
+  private final HttpRequest pingRequest = request().withMethod("GET").withPath("/ping");
 
-    private final List<HttpDiscovery.HostAndPort> servers = new ArrayList<>();
+  private final List<HttpDiscovery.HostAndPort> servers = new ArrayList<>();
 
-    private final static int SUCCESS = 200;
-    private final static int ERROR_CODE = 500;
+  private final static int SUCCESS = 200;
+  private final static int ERROR_CODE = 500;
 
-    @Before
-    public void setUp() throws Exception {
-        mockServerClient.when(pingRequest).respond(response().withStatusCode(SUCCESS));
+  @Before
+  public void setUp() throws Exception {
+    mockServerClient.when(pingRequest).respond(response().withStatusCode(SUCCESS));
 
-        servers.add(new HttpDiscovery.HostAndPort("localhost", mockServer.getPort()));
-        servers.add(new HttpDiscovery.HostAndPort("localhost", mockServer.getPort()));
-        servers.add(new HttpDiscovery.HostAndPort("localhost", mockServer.getPort()));
+    servers.add(new HttpDiscovery.HostAndPort("localhost", mockServer.getPort()));
+    servers.add(new HttpDiscovery.HostAndPort("localhost", mockServer.getPort()));
+    servers.add(new HttpDiscovery.HostAndPort("localhost", mockServer.getPort()));
 
-        httpClient = new HttpClient.Builder().discovery(new HttpDiscovery.Static(servers)).build();
+    httpClient = new HttpClient.Builder().discovery(new HttpDiscovery.Static(servers)).build();
+  }
+
+  @After
+  public void tearDown() {
+    mockServerClient.verify(pingRequest, VerificationTimes.atLeast(1));
+    httpClient.shutdown();
+  }
+
+  @Test
+  public void testSendBatchSuccess() {
+    final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH);
+    final HttpRequest request = sendRequest(batchRequest, RawHttpClient.V1_BATCH_ENDPOINT, SUCCESS);
+    httpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
+    mockServerClient.verify(request, VerificationTimes.atLeast(1));
+  }
+
+  @Test
+  public void testSendBatchSuccessV2() {
+    final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH_V2);
+    final HttpRequest request = sendRequest(batchRequest, RawHttpClient.V2_BATCH_ENDPOINT, SUCCESS);
+    httpClient.sendBatch(TestUtils.BATCH_V2).toCompletable().await();
+    mockServerClient.verify(request, VerificationTimes.atLeast(1));
+  }
+
+  private HttpRequest sendRequest(final String json, final String url, final int statusCode){
+    final HttpRequest request = request()
+      .withMethod("POST")
+      .withPath( "/" + url)
+      .withHeader("content-type", "application/json")
+      .withBody(json);
+
+    mockServerClient.when(request).respond(response().withStatusCode(statusCode));
+    return request;
+  }
+
+  @Test
+  public void testSendBatchFail() {
+    expected.expectMessage("500: Internal Server Error");
+    final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH);
+    final HttpRequest request = sendRequest( batchRequest, RawHttpClient.V1_BATCH_ENDPOINT, ERROR_CODE);
+    try {
+      httpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
+    } finally {
+      mockServerClient.verify(request, VerificationTimes.atLeast(3));
     }
-
-    @After
-    public void tearDown() {
-        mockServerClient.verify(pingRequest, VerificationTimes.atLeast(1));
-        httpClient.shutdown();
-    }
-
-    @Test
-    public void testSendBatchSuccess() {
-        final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH);
-        final HttpRequest request = sendRequest(batchRequest, RawHttpClient.V1_BATCH_ENDPOINT, SUCCESS);
-        httpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
-        mockServerClient.verify(request, VerificationTimes.atLeast(1));
-    }
-
-    @Test
-    public void testSendBatchSuccessV2() {
-        final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH_V2);
-        final HttpRequest request = sendRequest(batchRequest, RawHttpClient.V2_BATCH_ENDPOINT, SUCCESS);
-        httpClient.sendBatch(TestUtils.BATCH_V2).toCompletable().await();
-        mockServerClient.verify(request, VerificationTimes.atLeast(1));
-    }
-
-    private HttpRequest sendRequest(final String json, final String url, final int statusCode){
-        final HttpRequest request = request()
-                .withMethod("POST")
-                .withPath( "/" + url)
-                .withHeader("content-type", "application/json")
-                .withBody(json);
-
-        mockServerClient.when(request).respond(response().withStatusCode(statusCode));
-        return request;
-    }
-
-    @Test
-    public void testSendBatchFail() {
-        expected.expectMessage("500: Internal Server Error");
-        final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH);
-        final HttpRequest request = sendRequest( batchRequest, RawHttpClient.V1_BATCH_ENDPOINT, ERROR_CODE);
-        try {
-            httpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
-        } finally {
-            mockServerClient.verify(request, VerificationTimes.atLeast(3));
-        }
-    }
+  }
 }

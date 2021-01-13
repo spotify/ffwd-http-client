@@ -28,19 +28,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class HttpPing implements IPing {
-    private final RawHttpClientFactory clientFactory;
+  private final RawHttpClientFactory clientFactory;
 
-    @Override
-    public boolean isAlive(final Server server) {
-        try {
-            // TODO: how to block with observables?
-            clientFactory.newClient(server).ping().toCompletable().await();
-        } catch (Exception e) {
-            log.warn("Error when pinging server ({}): {}", server, e.getMessage());
-            log.trace("Error when pinging server ({}): {}", server, e.getMessage(), e);
-            return false;
-        }
-
-        return true;
+  @Override
+  public boolean isAlive(final Server server) {
+    try {
+      // TODO: how to block with observables?
+      clientFactory.newClient(server).ping().toCompletable().await();
+    } catch (Exception e) {
+      log.warn("Error when pinging server ({}): {}", server, e.getMessage());
+      log.trace("Error when pinging server ({}): {}", server, e.getMessage(), e);
+      return false;
     }
+
+    return true;
+  }
 }

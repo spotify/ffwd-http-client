@@ -27,47 +27,47 @@ import okhttp3.OkHttpClient;
 
 @Data
 public class RawHttpClientFactory {
-    private final ObjectMapper mapper;
-    private final OkHttpClient httpClient;
+  private final ObjectMapper mapper;
+  private final OkHttpClient httpClient;
 
-    public RawHttpClient newClient(final Server server) {
-        final String baseUrl = "http://" + server.getHost() + ":" + server.getPort();
-        return new RawHttpClient(mapper, httpClient, baseUrl);
+  public RawHttpClient newClient(final Server server) {
+    final String baseUrl = "http://" + server.getHost() + ":" + server.getPort();
+    return new RawHttpClient(mapper, httpClient, baseUrl);
+  }
+
+  public void shutdown() {
+    Exception e = null;
+
+    try {
+      httpClient.dispatcher().executorService().shutdown();
+    } catch (final Exception inner) {
+      e = inner;
     }
 
-    public void shutdown() {
-        Exception e = null;
+    try {
+      httpClient.connectionPool().evictAll();
+    } catch (final Exception inner) {
+      if (e != null) {
+        inner.addSuppressed(e);
+      }
 
-        try {
-            httpClient.dispatcher().executorService().shutdown();
-        } catch (final Exception inner) {
-            e = inner;
-        }
+      e = inner;
+    }
 
-        try {
-            httpClient.connectionPool().evictAll();
-        } catch (final Exception inner) {
-            if (e != null) {
-                inner.addSuppressed(e);
-            }
-
-            e = inner;
-        }
-
-        if (httpClient.cache() != null) {
-            try {
-                httpClient.cache().close();
-            } catch (final Exception inner) {
-                if (e != null) {
-                    inner.addSuppressed(e);
-                }
-
-                e = inner;
-            }
-        }
-
+    if (httpClient.cache() != null) {
+      try {
+        httpClient.cache().close();
+      } catch (final Exception inner) {
         if (e != null) {
-            throw new RuntimeException(e);
+          inner.addSuppressed(e);
         }
+
+        e = inner;
+      }
     }
+
+    if (e != null) {
+      throw new RuntimeException(e);
+    }
+  }
 }

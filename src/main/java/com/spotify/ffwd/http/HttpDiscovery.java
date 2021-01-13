@@ -36,88 +36,88 @@ import lombok.Data;
     @JsonSubTypes.Type(HttpDiscovery.Static.class), @JsonSubTypes.Type(HttpDiscovery.Srv.class),
 })
 public interface HttpDiscovery {
-    HostAndPort DEFAULT_SERVER = new HostAndPort("localhost", 8080);
+  HostAndPort DEFAULT_SERVER = new HostAndPort("localhost", 8080);
 
-    LoadBalancerBuilder<Server> apply(
-        LoadBalancerBuilder<Server> builder, String searchDomain
-    );
+  LoadBalancerBuilder<Server> apply(
+      LoadBalancerBuilder<Server> builder, String searchDomain
+  );
 
-    @JsonTypeName("static")
-    @Data
-    class Static implements HttpDiscovery {
-        private final List<HostAndPort> servers;
+  @JsonTypeName("static")
+  @Data
+  class Static implements HttpDiscovery {
+    private final List<HostAndPort> servers;
 
-        @Override
-        public LoadBalancerBuilder<Server> apply(
-            final LoadBalancerBuilder<Server> builder, final String searchDomain
-        ) {
-            final List<Server> out = new ArrayList<>();
+    @Override
+    public LoadBalancerBuilder<Server> apply(
+        final LoadBalancerBuilder<Server> builder, final String searchDomain
+    ) {
+      final List<Server> out = new ArrayList<>();
 
-            for (final HostAndPort hostAndPort : this.servers) {
-                final HostAndPort modified = hostAndPort.withOptionalSearchDomain(searchDomain);
-                out.add(new Server(modified.getHost(), modified.getPort()));
-            }
+      for (final HostAndPort hostAndPort : this.servers) {
+        final HostAndPort modified = hostAndPort.withOptionalSearchDomain(searchDomain);
+        out.add(new Server(modified.getHost(), modified.getPort()));
+      }
 
-            return builder.withDynamicServerList(new StaticServerList(out));
-        }
-
-        /**
-         * Default implementation for http discovery when nothing else is configured.
-         */
-        static HttpDiscovery supplyDefault() {
-            return new HttpDiscovery.Static(Collections.singletonList(DEFAULT_SERVER));
-        }
+      return builder.withDynamicServerList(new StaticServerList(out));
     }
 
-    @JsonTypeName("srv")
-    @Data
-    class Srv implements HttpDiscovery {
-        private final String record;
+    /**
+     * Default implementation for http discovery when nothing else is configured.
+     */
+    static HttpDiscovery supplyDefault() {
+      return new HttpDiscovery.Static(Collections.singletonList(DEFAULT_SERVER));
+    }
+  }
 
-        @Override
-        public LoadBalancerBuilder<Server> apply(
-            final LoadBalancerBuilder<Server> builder, final String searchDomain
-        ) {
-            final SrvServerList list;
+  @JsonTypeName("srv")
+  @Data
+  class Srv implements HttpDiscovery {
+    private final String record;
 
-            if (searchDomain != null) {
-                list = new SrvServerList(this.record + "." + searchDomain);
-            } else {
-                list = new SrvServerList(this.record);
-            }
+    @Override
+    public LoadBalancerBuilder<Server> apply(
+        final LoadBalancerBuilder<Server> builder, final String searchDomain
+    ) {
+      final SrvServerList list;
 
-            return builder.withDynamicServerList(list);
-        }
+      if (searchDomain != null) {
+        list = new SrvServerList(this.record + "." + searchDomain);
+      } else {
+        list = new SrvServerList(this.record);
+      }
+
+      return builder.withDynamicServerList(list);
+    }
+  }
+
+  @Data
+  class HostAndPort {
+    private final String host;
+    private final int port;
+
+    @JsonCreator
+    public static HostAndPort create(String input) {
+      final String[] parts = input.split(":");
+      if (parts.length != 2) {
+        throw new RuntimeException("Not a valid server (expected host:port): " + input);
+      }
+
+      final String host = parts[0];
+      final int port = Integer.parseInt(parts[1]);
+
+      return new HostAndPort(host, port);
     }
 
-    @Data
-    class HostAndPort {
-        private final String host;
-        private final int port;
+    public HostAndPort withOptionalSearchDomain(final String searchDomain) {
+      if (host.equals("localhost") || host.endsWith(".")) {
+        return this;
+      }
 
-        @JsonCreator
-        public static HostAndPort create(String input) {
-            final String[] parts = input.split(":");
-            if (parts.length != 2) {
-                throw new RuntimeException("Not a valid server (expected host:port): " + input);
-            }
+      if (searchDomain == null) {
+        return this;
+      }
 
-            final String host = parts[0];
-            final int port = Integer.parseInt(parts[1]);
-
-            return new HostAndPort(host, port);
-        }
-
-        public HostAndPort withOptionalSearchDomain(final String searchDomain) {
-            if (host.equals("localhost") || host.endsWith(".")) {
-                return this;
-            }
-
-            if (searchDomain == null) {
-                return this;
-            }
-
-            return new HostAndPort(host + "." + searchDomain, port);
-        }
+      return new HostAndPort(host + "." + searchDomain, port);
     }
+  }
 }
