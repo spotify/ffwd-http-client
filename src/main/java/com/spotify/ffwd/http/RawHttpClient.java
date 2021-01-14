@@ -37,74 +37,74 @@ import rx.Subscriber;
 
 @Data
 public class RawHttpClient {
-    public static final String V1_BATCH_ENDPOINT = "v1/batch";
-    public static final String V2_BATCH_ENDPOINT = "v2/batch";
-    public static final String PING_ENDPOINT = "ping";
+  public static final String V1_BATCH_ENDPOINT = "v1/batch";
+  public static final String V2_BATCH_ENDPOINT = "v2/batch";
+  public static final String PING_ENDPOINT = "ping";
 
-    private final ObjectMapper mapper;
-    private final OkHttpClient httpClient;
-    private final String baseUrl;
+  private final ObjectMapper mapper;
+  private final OkHttpClient httpClient;
+  private final String baseUrl;
 
-    public Observable<Void> sendBatch(final Batch batch) {
-        return sendBatch(batch, V1_BATCH_ENDPOINT);
+  public Observable<Void> sendBatch(final Batch batch) {
+    return sendBatch(batch, V1_BATCH_ENDPOINT);
+  }
+
+  public Observable<Void> sendBatch(final com.spotify.ffwd.http.model.v2.Batch batch) {
+    return sendBatch(batch, V2_BATCH_ENDPOINT);
+  }
+
+  private Observable<Void> sendBatch(final Object batch, final String url) {
+    final byte[] body;
+
+    try {
+      body = mapper.writeValueAsBytes(batch);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
     }
 
-    public Observable<Void> sendBatch(final com.spotify.ffwd.http.model.v2.Batch batch) {
-        return sendBatch(batch, V2_BATCH_ENDPOINT);
-    }
+    final Request.Builder request = new Request.Builder();
 
-    private Observable<Void> sendBatch(final Object batch, final String url) {
-        final byte[] body;
+    request.url(baseUrl + "/" + url);
+    request.post(RequestBody.create(MediaType.parse("application/json"), body));
 
-        try {
-            body = mapper.writeValueAsBytes(batch);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        final Request.Builder request = new Request.Builder();
-
-        request.url(baseUrl + "/" + url);
-        request.post(RequestBody.create(MediaType.parse("application/json"), body));
-
-        return execute(request);
-    }
+    return execute(request);
+  }
 
 
-    public Observable<Void> ping() {
-        final Request.Builder request = new Request.Builder();
+  public Observable<Void> ping() {
+    final Request.Builder request = new Request.Builder();
 
-        request.url(baseUrl + "/" + PING_ENDPOINT);
-        request.get();
+    request.url(baseUrl + "/" + PING_ENDPOINT);
+    request.get();
 
-        return execute(request);
-    }
+    return execute(request);
+  }
 
-    private Observable<Void> execute(final Request.Builder request) {
-        //TODO: handle unsubscribe and cancel the request if that happens.
-        return Observable.unsafeCreate(new Observable.OnSubscribe<Void>() {
-            public void call(final Subscriber<? super Void> subscriber) {
-                final Call call = httpClient.newCall(request.build());
+  private Observable<Void> execute(final Request.Builder request) {
+    //TODO: handle unsubscribe and cancel the request if that happens.
+    return Observable.unsafeCreate(new Observable.OnSubscribe<Void>() {
+      public void call(final Subscriber<? super Void> subscriber) {
+        final Call call = httpClient.newCall(request.build());
 
-                call.enqueue(new Callback() {
-                    public void onFailure(final Call call, final IOException e) {
-                        subscriber.onError(e);
-                    }
+        call.enqueue(new Callback() {
+          public void onFailure(final Call call, final IOException e) {
+            subscriber.onError(e);
+          }
 
-                    public void onResponse(final Call call, final Response response)
-                        throws IOException {
-                        if (response.isSuccessful()) {
-                            subscriber.onCompleted();
-                        } else {
-                            subscriber.onError(new RuntimeException(
-                                "HTTP request failed: " + response.code() + ": " +
-                                    response.message()));
-                        }
-
-                        response.close();
-                    }
-                });
+          public void onResponse(final Call call, final Response response)
+              throws IOException {
+            if (response.isSuccessful()) {
+              subscriber.onCompleted();
+            } else {
+              subscriber.onError(new RuntimeException(
+                  "HTTP request failed: " + response.code() + ": "
+                  + response.message()));
             }
+
+            response.close();
+          }
         });
-    }
+      }
+    });
+  }
 }

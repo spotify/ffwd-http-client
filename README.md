@@ -1,5 +1,5 @@
 # ffwd-http-client &#187;
-[![Build Status]((https://github.com/spotify/ffwd-http-client/workflows/JavaCI/badge.svg)](https://github.com/spotify/ffwd-http-client/actions?query=workflow%3AJavaCI)
+[![Build Status](https://github.com/spotify/ffwd-http-client/workflows/JavaCI/badge.svg)](https://github.com/spotify/ffwd-http-client/actions?query=workflow%3AJavaCI)
 [![License](https://img.shields.io/github/license/spotify/ffwd.svg)](LICENSE)
 
 

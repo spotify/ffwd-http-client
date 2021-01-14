@@ -38,80 +38,80 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 public class RawHttpClientTest {
-    private static final  String  REQUEST_JSON =  "{\"commonTags\":{\"what\":\"error-rate\"}," +
-            "\"commonResource\":{},\"points\":"
-            + "[{\"key\":\"test_key\",\"tags\":{\"what\":\"error-rate\"},\"resource\":"
-            + "{},\"value\":1234.0,\"timestamp\":11111}]}";
-    private static final int SUCCESS = 200;
-    private static final int ERROR_CODE = 500;
+  private static final  String  REQUEST_JSON =  "{\"commonTags\":{\"what\":\"error-rate\"}," +
+                                                "\"commonResource\":{},\"points\":"
+                                                + "[{\"key\":\"test_key\",\"tags\":{\"what\":\"error-rate\"},\"resource\":"
+                                                + "{},\"value\":1234.0,\"timestamp\":11111}]}";
+  private static final int SUCCESS = 200;
+  private static final int ERROR_CODE = 500;
 
-    @Rule
-    public MockServerRule mockServer = new MockServerRule(this);
+  @Rule
+  public MockServerRule mockServer = new MockServerRule(this);
 
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
+  @Rule
+  public ExpectedException expected = ExpectedException.none();
 
-    private MockServerClient mockServerClient;
+  private MockServerClient mockServerClient;
 
-    private final ObjectMapper mapper = HttpClient.Builder.setupApplicationJson();
+  private final ObjectMapper mapper = HttpClient.Builder.setupApplicationJson();
 
-    private final OkHttpClient okHttpClient = new OkHttpClient();
+  private final OkHttpClient okHttpClient = new OkHttpClient();
 
-    private RawHttpClient rawHttpClient;
+  private RawHttpClient rawHttpClient;
 
-    @Before
-    public void setUp() throws Exception {
-        mockServer.getPort();
+  @Before
+  public void setUp() throws Exception {
+    mockServer.getPort();
 
-        rawHttpClient =
-            new RawHttpClient(mapper, okHttpClient, "http://localhost:" + mockServer.getPort());
+    rawHttpClient =
+      new RawHttpClient(mapper, okHttpClient, "http://localhost:" + mockServer.getPort());
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    okHttpClient.connectionPool().evictAll();
+    okHttpClient.dispatcher().executorService().shutdown();
+
+    if (okHttpClient.cache() != null) {
+      okHttpClient.cache().close();
     }
+  }
 
-    @After
-    public void tearDown() throws Exception {
-        okHttpClient.connectionPool().evictAll();
-        okHttpClient.dispatcher().executorService().shutdown();
+  @Test
+  public void testPing() {
+    mockServerClient
+      .when(request().withMethod("GET").withPath("/ping"))
+      .respond(response().withStatusCode(SUCCESS));
+    rawHttpClient.ping().toCompletable().await();
+  }
 
-        if (okHttpClient.cache() != null) {
-            okHttpClient.cache().close();
-        }
-    }
+  @Test
+  public void testSendBatchSuccess() {
+    sendRequestToMockClient(REQUEST_JSON, RawHttpClient.V1_BATCH_ENDPOINT, SUCCESS);
+    rawHttpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
+  }
 
-    @Test
-    public void testPing() {
-        mockServerClient
-            .when(request().withMethod("GET").withPath("/ping"))
-            .respond(response().withStatusCode(SUCCESS));
-        rawHttpClient.ping().toCompletable().await();
-    }
+  @Test
+  public void testSendBatchSuccessV2() {
+    final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH_V2);
+    sendRequestToMockClient(batchRequest, RawHttpClient.V2_BATCH_ENDPOINT, SUCCESS);
+    rawHttpClient.sendBatch(TestUtils.BATCH_V2).toCompletable().await();
+  }
 
-    @Test
-    public void testSendBatchSuccess() {
-        sendRequestToMockClient(REQUEST_JSON, RawHttpClient.V1_BATCH_ENDPOINT, SUCCESS);
-        rawHttpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
-    }
+  @Test
+  public void testSendBatchFail() {
+    expected.expectMessage("500: Internal Server Error");
+    sendRequestToMockClient(REQUEST_JSON, RawHttpClient.V1_BATCH_ENDPOINT, ERROR_CODE);
+    rawHttpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
+  }
 
-    @Test
-    public void testSendBatchSuccessV2() {
-        final String batchRequest = TestUtils.createJsonString(TestUtils.BATCH_V2);
-        sendRequestToMockClient(batchRequest, RawHttpClient.V2_BATCH_ENDPOINT, SUCCESS);
-        rawHttpClient.sendBatch(TestUtils.BATCH_V2).toCompletable().await();
-    }
-
-    @Test
-    public void testSendBatchFail() {
-        expected.expectMessage("500: Internal Server Error");
-        sendRequestToMockClient(REQUEST_JSON, RawHttpClient.V1_BATCH_ENDPOINT, ERROR_CODE);
-        rawHttpClient.sendBatch(TestUtils.BATCH).toCompletable().await();
-    }
-
-    private void sendRequestToMockClient(final String requestJson, final String url, final int statusCode) {
-        mockServerClient
-                .when(request()
-                        .withMethod("POST")
-                        .withPath("/" + url)
-                        .withHeader("content-type", "application/json")
-                        .withBody(requestJson))
-                .respond(response().withStatusCode(statusCode));
-    }
+  private void sendRequestToMockClient(final String requestJson, final String url, final int statusCode) {
+    mockServerClient
+      .when(request()
+        .withMethod("POST")
+        .withPath("/" + url)
+        .withHeader("content-type", "application/json")
+        .withBody(requestJson))
+      .respond(response().withStatusCode(statusCode));
+  }
 }

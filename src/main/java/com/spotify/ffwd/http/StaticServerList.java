@@ -29,15 +29,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class StaticServerList implements ServerList<Server> {
-    private final List<Server> servers;
+  private final List<Server> servers;
 
-    @Override
-    public List<Server> getInitialListOfServers() {
-        return servers;
-    }
+  @Override
+  public List<Server> getInitialListOfServers() {
+    return servers;
+  }
 
-    @Override
-    public List<Server> getUpdatedListOfServers() {
-        return servers;
-    }
+  @Override
+  public List<Server> getUpdatedListOfServers() {
+    return servers;
+  }
 }
