@@ -9,7 +9,7 @@
 
   <groupId>com.spotify.ffwd</groupId>
   <artifactId>ffwd-http-client</artifactId>
-  <version>0.4.4-SNAPSHOT</version>
+  <version>0.4.5</version>
 
 
   <packaging>jar</packaging>
@@ -32,7 +32,7 @@
     <connection>scm:git:git@github.com:spotify/ffwd-http-client</connection>
     <developerConnection>scm:git:git@github.com:spotify/ffwd-http-client</developerConnection>
     <url>https://github.com/spotify/ffwd-http-client</url>
-    <tag>HEAD</tag>
+    <tag>0.4.5</tag>
   </scm>
 
   <developers>
