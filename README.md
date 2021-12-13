@@ -1,3 +1,7 @@
+# DEPRECATION NOTICE
+
+This repo is no longer actively maintained. While it should continue to work and there are no major known bugs, we will not be improving ffwd or releasing new versions.
+
 # ffwd-http-client &#187;
 [![Build Status](https://github.com/spotify/ffwd-http-client/workflows/JavaCI/badge.svg)](https://github.com/spotify/ffwd-http-client/actions?query=workflow%3AJavaCI)
 [![License](https://img.shields.io/github/license/spotify/ffwd.svg)](LICENSE)
